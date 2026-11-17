@@ -11,3 +11,9 @@ Copy this outline for each entry:
 - **Agent produced:** What it made or changed.
 - **Checked or changed:** How you checked it, and what you fixed.
 ```
+
+## 2026-11-17: Built the median sale-price page
+
+- **Asked:** "READ Agents.md and docs/data_description_sheet.md first. Then replace the placeholder index.html with a page that shows the median sale price for each city, computed from data/college_town_home_sales.csv. Leave out sales under $10,000 and state that rule on the page."
+- **Agent produced:** Replaced the placeholder `index.html` with a plain HTML, CSS and JavaScript page. The script loads the CSV, leaves out sales below $10,000, groups the remaining sales by city and state, and renders each city's median and sales count.
+- **Checked or changed:** Read `AGENTS.md` and `docs/data_description_sheet.md` before analysis. Confirmed the CSV header and computed reference medians and totals with Python: 35,402 sales were included and 40 were excluded. Also fixed the repository instruction mismatch by locating the actual uppercase `AGENTS.md` file after the lowercase `Agents.md` path was not present.
