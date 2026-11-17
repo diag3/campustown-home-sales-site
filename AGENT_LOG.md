@@ -23,3 +23,9 @@ Copy this outline for each entry:
 - **Asked:** "Add a bar chart comparing median home sale prices across cities."
 - **Agent produced:** Added a responsive horizontal bar chart above the existing city table, using the same browser-computed medians and the same $10,000 exclusion rule.
 - **Checked or changed:** Kept the chart data-derived and dependency-free, sorted bars from highest to lowest median, and added compact mobile styling.
+
+## 2026-11-17: Fixed the median-price bar-chart scale
+
+- **Asked:** "Fix the horizontal bar chart for median sale price by city. Make each bar length proportional to its median on a common zero-based scale, keep the cities sorted highest to lowest, retain dollar labels, and add a labeled price axis."
+- **Agent produced:** Updated `index.html` so bar tracks and bars use block-level sizing, bars use a shared $0-to-$1 million scale for the current data, and a labeled axis with ticks is rendered above the chart.
+- **Checked or changed:** Verified the chart in a browser and checked computed bar widths against the median values, with Davis at 88.9% and Urbana at 22.99% of the common scale.

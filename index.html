@@ -100,6 +100,8 @@
     }
 
     .bar-track {
+      display: block;
+      position: relative;
       height: 1.25rem;
       overflow: hidden;
       border-radius: 0.2rem;
@@ -107,11 +109,49 @@
     }
 
     .bar {
+      display: block;
       height: 100%;
       min-width: 0.2rem;
       border-radius: inherit;
       background: var(--navy);
     }
+
+    .chart-axis-title {
+      margin: 0 0 0.35rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .chart-axis,
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(8rem, 11rem) 1fr auto;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .chart-axis { margin-bottom: 2.5rem; }
+
+    .axis-ticks {
+      position: relative;
+      height: 1.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .axis-tick {
+      position: absolute;
+      top: 1.05rem;
+      color: var(--muted);
+      font-size: 0.75rem;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .axis-tick:first-child { transform: translateX(0); }
+    .axis-tick:last-child { transform: translateX(-100%); }
 
     .bar-value {
       min-width: 5.5rem;
@@ -164,6 +204,7 @@
       main { padding-top: 2rem; }
       th, td { padding: 0.75rem 0.8rem; }
       .bar-row { grid-template-columns: minmax(7rem, 9rem) 1fr auto; gap: 0.5rem; }
+      .chart-axis { grid-template-columns: minmax(7rem, 9rem) 1fr auto; gap: 0.5rem; }
       .bar-value { min-width: 4.75rem; }
     }
   </style>
@@ -179,8 +220,14 @@
     <p class="status" id="status" role="status">Loading sales data...</p>
 
     <section class="chart-wrap" aria-labelledby="chart-title">
-    <h2 class="chart-title" id="chart-title">Median sale price by city</h2>
-    <div class="bar-chart" id="chart" role="list"></div>
+      <h2 class="chart-title" id="chart-title">Median sale price by city</h2>
+      <p class="chart-axis-title">Median sale price (USD)</p>
+      <div class="chart-axis" aria-hidden="true">
+        <span></span>
+        <div class="axis-ticks" id="chart-axis"></div>
+        <span></span>
+      </div>
+      <div class="bar-chart" id="chart" role="list"></div>
     </section>
 
     <div class="table-wrap">
@@ -266,6 +313,7 @@
     async function loadResults() {
       const status = document.querySelector("#status");
       const chart = document.querySelector("#chart");
+      const chartAxis = document.querySelector("#chart-axis");
       const results = document.querySelector("#results");
 
       try {
@@ -296,14 +344,25 @@
           .map((group) => ({ ...group, median: median(group.prices) }))
           .sort((a, b) => a.city.localeCompare(b.city));
 
-        const chartMax = Math.max(...cities.map((group) => group.median));
-        chart.innerHTML = [...cities]
-          .sort((a, b) => b.median - a.median)
+        const highestMedian = Math.max(...cities.map((group) => group.median));
+        const chartScale = Math.ceil(highestMedian / 250000) * 250000;
+        const sortedCities = [...cities].sort((a, b) => b.median - a.median);
+        const tickValues = [0, 0.25, 0.5, 0.75, 1].map((portion) => portion * chartScale);
+
+        chartAxis.innerHTML = tickValues.map((value, index) => {
+          const left = (index / (tickValues.length - 1)) * 100;
+          const label = value === 0
+            ? "$0"
+            : `$${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 2).replace(/\.?0+$/, "")}M`;
+          return `<span class="axis-tick" style="left: ${left}%">${label}</span>`;
+        }).join("");
+
+        chart.innerHTML = sortedCities
           .map((group) => `
             <div class="bar-row" role="listitem">
               <span class="bar-label">${group.city}, ${group.state}</span>
               <span class="bar-track" aria-hidden="true">
-                <span class="bar" style="width: ${(group.median / chartMax) * 100}%"></span>
+                <span class="bar" style="width: ${(group.median / chartScale) * 100}%"></span>
               </span>
               <span class="bar-value">${formatCurrency(group.median)}</span>
             </div>
