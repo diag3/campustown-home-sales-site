@@ -69,6 +69,57 @@
       font-size: 0.9rem;
     }
 
+    .chart-wrap {
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      background: var(--paper);
+    }
+
+    .chart-title {
+      margin: 0 0 1rem;
+      font-size: 1.15rem;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(8rem, 11rem) 1fr auto;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .bar-label {
+      font-weight: 650;
+      font-size: 0.9rem;
+    }
+
+    .bar-track {
+      height: 1.25rem;
+      overflow: hidden;
+      border-radius: 0.2rem;
+      background: var(--blue);
+    }
+
+    .bar {
+      height: 100%;
+      min-width: 0.2rem;
+      border-radius: inherit;
+      background: var(--navy);
+    }
+
+    .bar-value {
+      min-width: 5.5rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+    }
+
     .table-wrap {
       overflow-x: auto;
       border: 1px solid var(--line);
@@ -112,6 +163,8 @@
     @media (max-width: 38rem) {
       main { padding-top: 2rem; }
       th, td { padding: 0.75rem 0.8rem; }
+      .bar-row { grid-template-columns: minmax(7rem, 9rem) 1fr auto; gap: 0.5rem; }
+      .bar-value { min-width: 4.75rem; }
     }
   </style>
 </head>
@@ -124,6 +177,11 @@
 
     <p class="rule">Sales under $10,000 are left out.</p>
     <p class="status" id="status" role="status">Loading sales data...</p>
+
+    <section class="chart-wrap" aria-labelledby="chart-title">
+    <h2 class="chart-title" id="chart-title">Median sale price by city</h2>
+    <div class="bar-chart" id="chart" role="list"></div>
+    </section>
 
     <div class="table-wrap">
       <table>
@@ -207,6 +265,7 @@
 
     async function loadResults() {
       const status = document.querySelector("#status");
+      const chart = document.querySelector("#chart");
       const results = document.querySelector("#results");
 
       try {
@@ -237,6 +296,19 @@
           .map((group) => ({ ...group, median: median(group.prices) }))
           .sort((a, b) => a.city.localeCompare(b.city));
 
+        const chartMax = Math.max(...cities.map((group) => group.median));
+        chart.innerHTML = [...cities]
+          .sort((a, b) => b.median - a.median)
+          .map((group) => `
+            <div class="bar-row" role="listitem">
+              <span class="bar-label">${group.city}, ${group.state}</span>
+              <span class="bar-track" aria-hidden="true">
+                <span class="bar" style="width: ${(group.median / chartMax) * 100}%"></span>
+              </span>
+              <span class="bar-value">${formatCurrency(group.median)}</span>
+            </div>
+          `).join("");
+
         results.innerHTML = cities.map((group) => `
           <tr>
             <td class="city">${group.city}, ${group.state}</td>
@@ -249,6 +321,7 @@
         status.textContent = `${included.toLocaleString("en-US")} sales across ${cities.length} cities; ${excluded.toLocaleString("en-US")} sales under $10,000 excluded.`;
       } catch (error) {
         status.textContent = "The sales data could not be loaded.";
+        chart.innerHTML = "";
         results.innerHTML = `<tr><td colspan="3">${error.message}</td></tr>`;
       }
     }
